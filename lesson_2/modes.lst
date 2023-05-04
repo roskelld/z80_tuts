@@ -1,0 +1,59 @@
+# file opened: modes.asm
+ 1    0000                  device	zxspectrum48
+ 2    0000
+ 3    0000                  org $8000
+ 4    8000
+ 5    8000 C3 08 80         jp start            ; jump over data to code (extended immediate)
+ 6    8003
+ 7    8003              string:
+ 8    8003 68 65 6C 6C      db "hello"
+ 8    8007 6F
+ 9    8008
+10    8008              STRING_LENGTH   = 5
+11    8008
+12    8008              ROM_CLS         = $0DAF ; ROM address for "Clear Screen" routine
+13    8008              COLOR_ATTR      = $5800 ; start of color attribute memory
+14    8008              ENTER           = $0D   ; Character code for Enter key
+15    8008              BLACK_WHITE     = $47   ; black paper, white ink - %01000111
+16    8008
+17    8008              start:
+18    8008 ED 56            im 1                ; Set interrupt mode to 1 (interrupt mode)
+19    800A CD AF 0D         call ROM_CLS        ; Call clear screen routine from ROM (externded immediate)
+20    800D 21 03 80         ld hl,string        ; HL - address of string (register,extended immediate)
+21    8010 06 05            ld b,STRING_LENGTH  ; B - length of string (register,immeidate)
+22    8012              loop:
+23    8012 7E               ld a,(hl)           ; A - byte at address in HL (register,register indirect)
+24    8013 D7               rst $10             ; print character code in A (modified page zero)
+25    8014 23               inc hl              ; increment HL to address of next character (register)
+26    8015 05               dec b               ; decrement B (register)
+27    8016 20 FA            jr nz,loop          ; if B not zero, jump back to top of loop (condition,relative)
+28    8018 3E 0D            ld a,ENTER          ; A = Enter character code (register,immediate)
+29    801A D7               rst $10             ; print Enter for new line (modified page zero)
+30    801B
+31    801B                  ; Let's change the color of the first character we printed
+32    801B 3E 47            ld a,BLACK_WHITE    ; A = black/white color attribute (register,immediate)
+33    801D 32 00 58         ld (COLOR_ATTR),a   ; Color attribute(0,0) = A (extended,register)
+34    8020
+35    8020                  ; Let's do it again, but unrolled with the first letter capitalized
+36    8020 DD 21 03 80      ld ix,string        ; IX = address of string (register,extended immediate)
+37    8024 DD CB 00 AE      res 5,(ix)          ; reset bit 5 of first character (bit,indexed)
+38    8028 DD 7E 00         ld a,(ix)           ; A = string[0] (register,indexed)
+39    802B D7               rst $10             ; print character (modified page zero)
+40    802C DD 7E 01         ld a,(ix+1)         ; A = string[1] (register,indexed)
+41    802F D7               rst $10             ; print character (modified page zero)
+42    8030 DD 7E 02         ld a,(ix+2)         ; A = string[2] (register,indexed)
+43    8033 D7               rst $10             ; print character (modified page zero)
+44    8034 DD 7E 03         ld a,(ix+3)         ; A = string[3] (register,indexed)
+45    8037 D7               rst $10             ; print character (modified page zero)
+46    8038 DD 7E 04         ld a,(ix+4)         ; A = string[4] (register,indexed)
+47    803B D7               rst $10             ; print character (modified page zero)
+48    803C 3E 0D            ld a,ENTER          ; A = Enter character code (register,immediate)
+49    803E D7               rst $10             ; print Enter for new line (modified page zero)
+50    803F
+51    803F                  ; And, we're done
+52    803F C9               ret                 ; return from call (implied)
+53    8040
+54    8040              ; Deployment: Snapshot
+55    8040                  savesna "modes.sna",start
+56    8040
+# file closed: modes.asm

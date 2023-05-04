@@ -1,0 +1,65 @@
+# file opened: data.asm
+ 1    0000                  device	zxspectrum48
+ 2    0000
+ 3    0000                  org $8000
+ 4    8000
+ 5    8000 C3 03 80         jp start
+ 6    8003
+ 7    8003              SCN_MEM_1       = $4000
+ 8    8003              SCN_MEM_2       = $45FF
+ 9    8003              SCN_MEM_3       = $4600
+10    8003              COL_MEM_1       = $5800
+11    8003              PIXEL_ROW_16    = $200  ; Number of bytes in 16 rows of pixels
+12    8003              GFX_1           = %11001100
+13    8003              GFX_2           = %10011001
+14    8003              BLU_BLK         = $41
+15    8003
+16    8003              start:
+17    8003 3E CC            ld a,GFX_1
+18    8005 11 00 40         ld de,SCN_MEM_1
+19    8008 12               ld (de),a
+20    8009 EB               ex de,hl
+21    800A 11 01 40         ld de,SCN_MEM_1+1
+22    800D 01 00 02         ld bc,PIXEL_ROW_16
+23    8010
+24    8010              bitmap_loop:
+25    8010 ED A0            ldi                 ; fill first 16 rows with vertical bars
+26    8012 78               ld a,b
+27    8013 B1               or c
+28    8014 20 FA            jr nz,bitmap_loop
+29    8016 CB 3E            srl (hl)            ; shift pattern to right
+30    8018 01 00 02         ld bc,PIXEL_ROW_16
+31    801B ED B0            ldir                ; fill the next 16 rows with shifted bars
+32    801D CB 3E            srl(hl)             ; shift pattern to right once more
+33    801F 11 FF 45         ld de,SCN_MEM_2
+34    8022 ED A8            ldd                 ; copy new pattern to end of next block, dec DE
+35    8024 01 FE 01         ld bc,$1FE
+36    8027 21 FF 45         ld hl,SCN_MEM_2
+37    802A ED B8            lddr                ; fill in third block backwards
+38    802C 21 00 46         ld hl,SCN_MEM_3
+39    802F 36 99            ld (hl),GFX_2
+40    8031 11 01 46         ld de,SCN_MEM_3+1
+41    8034 01 FF 00         ld bc,$FF
+42    8037 D9               exx                 ; we'll get back to fourth block later
+43    8038 21 00 58         ld hl,COL_MEM_1
+44    803B 36 41            ld (hl),BLU_BLK     ; blue ink on black paper
+45    803D 11 01 58         ld de,COL_MEM_1+1
+46    8040 01 FF 00         ld bc,$FF
+47    8043              color_loop:
+48    8043 ED A0            ldi
+49    8045 34               inc (hl)            ; increment ink color
+50    8046 3E 07            ld a,$07
+51    8048 A6               and (hl)            ; check to see if ink is set to zero (black)
+52    8049 20 02            jr nz,next
+53    804B 36 41            ld (hl),BLU_BLK     ; re-initialize color
+54    804D              next:
+55    804D 78               ld a,b
+56    804E B1               or c
+57    804F 20 F2            jr nz,color_loop
+58    8051 D9               exx                 ; bring back fouth block addresses
+59    8052 ED B0            ldir                ; fill in fourth block
+60    8054 C9               ret
+61    8055
+62    8055              ; Deployment: Snapshot
+63    8055                  savesna "data.sna",start
+# file closed: data.asm

@@ -1,0 +1,77 @@
+# file opened: cond.asm
+ 1    0000                  device	zxspectrum48
+ 2    0000
+ 3    0000                  org $8000
+ 4    8000
+ 5    8000              ;CHARACTER CODES
+ 6    8000              ENTER   = $0D
+ 7    8000              UPPER_A = $41
+ 8    8000              UPPER_Z = $5A
+ 9    8000              LOWER_A = $61
+10    8000              LOWER_Z = $7A
+11    8000
+12    8000              message:
+13    8000 57 65 6C 63      db "Welcome to Poole",ENTER
+13    8004 6F 6D 65 20
+13    8008 74 6F 20 50
+13    800C 6F 6F 6C 65
+13    8010 0D
+14    8011
+15    8011              MSG_LEN = $ - message
+16    8011
+17    8011              start:
+18    8011                  ; Print original message
+19    8011 21 00 80         ld hl,message
+20    8014 06 11            ld b,MSG_LEN
+21    8016              orig_loop:
+22    8016 7E               ld a,(hl)
+23    8017 D7               rst $10
+24    8018 23               inc hl
+25    8019 10 FB            djnz orig_loop
+26    801B
+27    801B                  ; Print lowercase
+28    801B 21 00 80         ld hl,message
+29    801E 7E               ld a,(hl)
+30    801F              lower_loop:
+31    801F FE 41            cp UPPER_A
+32    8021 38 05            jr c,print_lower_char
+33    8023 FE 5B            cp UPPER_Z+1
+34    8025 DC 3E 80         call c,tolower
+35    8028              print_lower_char:
+36    8028 D7               rst $10
+37    8029 23               inc hl
+38    802A 7E               ld a,(hl)
+39    802B FE 0D            cp ENTER
+40    802D 20 F0            jr nz,lower_loop
+41    802F D7               rst $10
+42    8030
+43    8030                  ; print uppercase
+44    8030 21 00 80         ld hl,message
+45    8033 06 11            ld b,MSG_LEN
+46    8035              upper_loop:
+47    8035 7E               ld a,(hl)
+48    8036 CD 41 80         call toupper
+49    8039 D7               rst $10
+50    803A 23               inc hl
+51    803B 10 F8            djnz upper_loop
+52    803D
+53    803D                  ; All done
+54    803D C9               ret
+55    803E
+56    803E              tolower:
+57    803E C6 20            add $20
+58    8040 C9               ret
+59    8041
+60    8041              toupper:
+61    8041
+62    8041 FE 61            cp LOWER_A
+63    8043 D8               ret c
+64    8044 FE 7B            cp LOWER_Z+1
+65    8046 D0               ret nc
+66    8047 D6 20            sub $20
+67    8049 C9               ret
+68    804A
+69    804A              ; Deployment: Snapshot
+70    804A                  savesna "cond.sna",start
+71    804A
+# file closed: cond.asm

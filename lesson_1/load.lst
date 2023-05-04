@@ -1,0 +1,20 @@
+# file opened: load.asm
+ 1    0000                  device	zxspectrum48
+ 2    0000
+ 3    0000                  org $8000
+ 4    8000
+ 5    8000 C3 03 80         jp start
+ 6    8003
+ 7    8003              BORDER          = 8859   ; Write the screen border color
+ 8    8003              COLOR_ATTR      = $5800
+ 9    8003              start:
+10    8003 3E D6            ld a,$D6
+11    8005 32 00 58         ld (COLOR_ATTR),a
+12    8008 3E 85            ld a,$85
+13    800A CD 9B 22         call BORDER
+14    800D C9               ret
+15    800E
+16    800E              ; Deployment: Snapshot
+17    800E                  savesna "load.sna",start
+18    800E
+# file closed: load.asm
